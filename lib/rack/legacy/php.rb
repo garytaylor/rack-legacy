@@ -12,6 +12,9 @@ module Rack
         super app, public_dir
         @php_exe = php_exe
         @htaccess_enabled = htaccess_enabled
+        if(::File.exists?('config/php.ini'))
+          @custom_config="config/php.ini" 
+        end
       end
 
       # Adds extension checking in addition to checks in superclass.
@@ -28,6 +31,7 @@ module Rack
         config.merge! HtAccess.merge_all(path, public_dir) if @htaccess_enabled
         config = config.collect {|(key, value)| "#{key}=#{value}"}
         config.collect! {|kv| ['-d', kv]}
+        config << ['-c',@custom_config] unless @custom_config.nil?
 
         env['SCRIPT_FILENAME'] = path
         super env, @php_exe, *config.flatten
